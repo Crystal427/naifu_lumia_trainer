@@ -1,0 +1,416 @@
+name: sumomo-run-2-r
+target: modules.train_sdxl.setup
+
+trainer:
+  model_path: /home/naifu/models/Large-2_e1_s960.safetensors
+  batch_size: 16 
+  resolution: 1024
+  seed: 1919810
+  wandb_id: "SDXL_FT"
+  use_ema: false
+  use_xformers: true
+  accumulate_grad_batches: 24
+  gradient_clip_val: 0.0
+  
+  save_format: checkpoint
+  checkpoint_dir: ./outputs/models
+  checkpoint_freq: -1
+  checkpoint_steps: 30
+  save_weights_only: true
+  max_epochs: 10
+  max_steps: -1
+  resume: True
+  
+advanced:
+  train_text_encoder_1: false
+  train_text_encoder_2: false
+  text_encoder_1_lr: 1e-6
+  text_encoder_2_lr: 1e-6
+  offset_noise: true
+  offset_noise_val: 0.0375
+  min_snr: True
+  min_snr_val: 5
+  timestep_start: 0
+  timestep_end: 1000
+  input_perturbation: false
+  input_perturbation_val: 0.0
+  v_parameterization: false
+  scale_v_pred_loss_like_noise_pred: false
+  v_pred_like_loss: 0
+  debiased_estimation_loss: false
+  zero_terminal_snr: false
+  timestep_sampler_type: logit_normal
+
+lightning:
+  accelerator: gpu
+  devices: -1
+  precision: bf16-mixed
+
+dataset:
+  name: data.bucket.AdaptiveSizeDataset
+  img_path: "./dataset"
+  center_crop: false
+  ucg: 0.0
+  num_workers: 12
+  max_token_length: 225 # [75, 150, 225]
+  debug_arb: false
+  allow_duplicates: false
+  target_area: 1_048_576 # 1024*1024
+  use_legacy_key: false
+  process_batch_fn: data.processors.shuffle_prompts_sdstyle
+  repeat_strategy:
+    - [3d, 1]
+    - [abara_heiki, 4]
+    - [abisswalker8, 17]
+    - [agoto, 7]
+    - [aki99, 7]
+    - [akizero1510, 10]
+    - [alphonse_(white_datura), 7]
+    - [amakawa_tamawo, 4]
+    - [amashiro_natsuki, 5]
+    - [ama_mitsuki, 4]
+    - [ame_usari, 20]
+    - [anmi, 6]
+    - [aroa_(aroamoyasi), 9]
+    - [as109, 3]
+    - [asakuraf, 3]
+    - [asa_no_ha_(awayuki), 8]
+    - [ask_(askzy), 8]
+    - [atdan, 3]
+    - [azumi_kazuki, 8]
+    - [azuuru, 7]
+    - [banishment, 8]
+    - [bbolalus, 12]
+    - [bebe_(bebe_pp), 6]
+    - [been, 7]
+    - [betabeet, 5]
+    - [bigxixi, 17]
+    - [bingchuan_xian_yu_huang, 16]
+    - [bison_cangshu, 4]
+    - [bjd, 1]
+    - [blade_(galaxist), 1]
+    - [blew_andwhite, 10]
+    - [chameleon_man_(three), 6]
+    - [cha_goma, 20]
+    - [chen_bin, 7]
+    - [chiachun0621, 7]
+    - [chii_(tsumami_tsumamare), 5]
+    - [chon_(chon33v), 7]
+    - [chyoel, 7]
+    - [ciloranko, 6]
+    - [cobalta, 8]
+    - [conago, 20]
+    - [cotono_(nazekun), 18]
+    - [d._(ddot2018), 20]
+    - [daidai_ookami, 7]
+    - [da_mao_banlangen, 8]
+    - [dead_purity, 2]
+    - [dema_hmw, 5]
+    - [deyui, 5]
+    - [dino_(dinoartforame), 3]
+    - [dm_(dai_miao), 9]
+    - [dolphro-kun, 20]
+    - [dong_ji, 12]
+    - [doribae, 10]
+    - [dsmile, 6]
+    - [eip_(pepai), 10]
+    - [elina_(e2n04n), 8]
+    - [emia_(castilla), 20]
+    - [fh_moya, 5]
+    - [fkey, 4]
+    - [frost_fog, 10]
+    - [fukahire_(ruinon), 5]
+    - [fukemachi, 8]
+    - [fukuro_daizi, 4]
+    - [funa_(sakana), 4]
+    - [fusuma_(ramunezake), 20]
+    - [fuzichoco, 4]
+    - [gaou_(umaiyo_puyoman), 8]
+    - [gao_(gaolukchup), 9]
+    - [gin00, 4]
+    - [ginniroya, 6]
+    - [grandia_lee, 6]
+    - [gusha_s, 8]
+    - [hagi_(ame_hagi), 5]
+    - [hagoonha, 10]
+    - [hanato_(seonoaiko), 9]
+    - [hanekoto, 6]
+    - [happyongdal, 9]
+    - [hatenashun422, 9]
+    - [healthyman, 6]
+    - [hennnachoco, 20]
+    - [henreader, 3]
+    - [hibi89, 6]
+    - [hidulume, 4]
+    - [hiiragi_akio, 8]
+    - [hisagi_(puchimaple), 11]
+    - [hisame_mon, 11]
+    - [hiten_(hitenkei), 6]
+    - [hk_nnm, 16]
+    - [hokori_sakuni, 6]
+    - [hoshi_(snacherubi), 5]
+    - [houkisei, 6]
+    - [hukahire0120, 14]
+    - [hxxg, 2]
+    - [hyatsu, 15]
+    - [ibara_riato, 15]
+    - [icecake, 7]
+    - [ikeuchi_tanuma, 3]
+    - [inugami_kira, 5]
+    - [irodori_warabi, 12]
+    - [izumi_sai, 5]
+    - [jima, 20]
+    - [john_kafka, 6]
+    - [junpaku_karen, 10]
+    - [jyt, 8]
+    - [kaede_(sayappa), 5]
+    - [kaerunoko, 14]
+    - [kagawa_yuusaku, 7]
+    - [kamiyoshi_rika, 4]
+    - [kamizaki_hibana, 5]
+    - [kanda_done, 8]
+    - [kani_biimu, 4]
+    - [kanzarin, 7]
+    - [karasu_btk, 5]
+    - [karohroka, 15]
+    - [kasuga_haruhi, 7]
+    - [kazutake_hazano, 4]
+    - [ke-ta, 6]
+    - [kedama_milk, 10] #由 5 -> 10
+    - [kitere, 18]
+    - [koh_rd, 19]
+    - [koka_(rikku-file), 20]
+    - [kokko_(kokko3045), 15]
+    - [komachi_pochi, 11]
+    - [konya_karasue, 7]
+    - [kotamun, 12]
+    - [kouyafu, 18]
+    - [kyano_(kyanora3141), 13]
+    - [kz_oji, 9]
+    - [leiq, 8]
+    - [liduke, 7]
+    - [lifeline_(a384079959), 4]
+    - [liyom, 14]
+    - [lobelia_(saclia), 4]
+    - [luicent, 5]
+    - [luna_(luna610), 6]
+    - [maccha_(mochancc), 4]
+    - [mafuyu_(chibi21), 4]
+    - [majamari, 12]
+    - [mamimu_(ko_cha_22), 8]
+    - [mamuru, 6]
+    - [mankai_kaika, 1]
+    - [masami_chie, 7]
+    - [massakasama, 2]
+    - [matanonki, 9]
+    - [meion, 10]
+    - [memuro, 4]
+    - [meunhongcha, 8]
+    - [mian_lang, 6]
+    - [mignon, 2]
+    - [migolu, 6]
+    - [mikaze_oto, 7]
+    - [mika_pikazo, 2]
+    - [mikozin, 1]
+    - [mimoza_(96mimo414), 9]
+    - [min_(120716), 17]
+    - [missile228, 7]
+    - [misyune, 8]
+    - [miv4t, 5]
+    - [miwano rag, 3]
+    - [miyuki_(miyuki0529), 11]
+    - [miyu_(miy_u1308), 4]
+    - [mizumizu_(phoenix), 11]
+    - [mizumi_zumi, 10]
+    - [mochizuki_kei, 3]
+    - [modare, 4]
+    - [moemaru, 9]
+    - [momoko_(momopoco), 3]
+    - [momozu_komamochi, 3]
+    - [mooosikasite, 6]
+    - [mormormorp, 19]
+    - [mosou_keito, 20]
+    - [mountain_han, 3]
+    - [munseonghwa, 12]
+    - [naga_u, 3]
+    - [nahaki, 10]
+    - [nakkar, 5]
+    - [namagome_negi, 8]
+    - [namiki_itsuki, 9]
+    - [nanaken_nana, 9]
+    - [nanmokaken, 20]
+    - [navy_(navy.blue), 10]
+    - [na_tarapisu153, 4]
+    - [nekojira, 12]
+    - [nekomeen, 8]
+    - [nekometaru, 10]
+    - [neko_no_youchuu, 4]
+    - [ningen_mame, 5]
+    - [noah_(0noah), 20]
+    - [nonddu, 7]
+    - [novelance, 13]
+    - [noyu_(noyu23386566), 9]
+    - [nyahu_(nyahu_77), 13]
+    - [ogipote, 8]
+    - [omochi_monaka, 15]
+    - [omone_hokoma_agm, 2]
+    - [onineko, 13]
+    - [o_(jshn3457), 7]
+    - [parsley-f, 8]
+    - [peepo_rose, 20]
+    - [pipi, 10]
+    - [pokachu, 13]
+    - [potg_(piotegu), 6]
+    - [pro-p, 15]
+    - [pumpkinspice, 7]
+    - [pvc, 1]
+    - [qianqianjie, 11]
+    - [rai_(sakuranbo sugar), 6]
+    - [rank_alee, 9]
+    - [rco_as, 7]
+    - [redum4, 19]
+    - [rei_(sanbonzakura), 5]
+    - [rella, 5]
+    - [reoen, 5]
+    - [requiem_(requiem_art), 13]
+    - [rhasta, 8]
+    - [ribao, 10]
+    - [ririko, 10]
+    - [rotarran, 17]
+    - [rucaco, 7]
+    - [ruochongsang, 12]
+    - [rurudo, 4]
+    - [RuRumor999, 8]
+    - [ryota_(ry_o_ta), 4]
+    - [sakutaishi, 7]
+    - [saku_nosuke, 13]
+    - [sarena, 7]
+    - [sbgu, 8]
+    - [sei_umehara, 11]
+    - [sencha_(senchat), 13]
+    - [sencha_(senta_10), 17]
+    - [senyee, 20]
+    - [sheya, 3]
+    - [shibakure_inuwo, 4]
+    - [shio_(shiofeifei), 8]
+    - [shiro9jira, 13]
+    - [shiro_albino, 13]
+    - [shnva, 10]
+    - [shouu-kun, 9]
+    - [sho_(sho_lwlw), 13]
+    - [snow_is, 14]
+    - [sorani_(kaeru0768), 5]
+    - [sora_72-iro, 6]
+    - [sorotu, 17]
+    - [suimya, 5]
+    - [suteinua, 5]
+    - [suzuho_hotaru, 11]
+    - [suzumi_(ccroquette), 20]
+    - [suzumori_uina, 17]
+    - [swd3e2, 3]
+    - [sy4, 9]
+    - [teffish, 8]
+    - [teranekosu, 8]
+    - [tianliang_duohe_fangdongye, 10]
+    - [tidsean, 13]
+    - [tokitou setsuna, 4]
+    - [tokkyu, 3]
+    - [toosaka_asagi, 2]
+    - [topia, 9]
+    - [toufu_mentaru_zabuton, 16]
+    - [tsubasa_tsubasa, 12]
+    - [tyakomes, 9]
+    - [uechin_ewokaku, 4]
+    - [uekura_eku, 9]
+    - [uenomigi, 6]
+    - [umehara_sei, 10]
+    - [umemaro_(siona0908), 8]
+    - [usashiro_mani, 5]
+    - [vihua6, 12]
+    - [villainchin, 7]
+    - [void_0, 11]
+    - [wanke, 9]
+    - [wasabi_(sekai), 11]
+    - [waymay, 11]
+    - [welchino, 13]
+    - [weri, 9]
+    - [wlop, 6]
+    - [xi_xeong, 10]
+    - [yamiko, 20]
+    - [yanggaengwang, 9]
+    - [yashemao_qishi, 13]
+    - [yonchan, 13]
+    - [yoruhoshi_owl, 5]
+    - [yorunogumo, 15]
+    - [youichi (45 01), 10]
+    - [yuizaki_kazuya, 6]
+    - [yukoring, 20]
+    - [yumenouchi_chiharu, 20]
+    - [yunikon, 9]
+    - [yunmi_0527, 14]
+    - [yusano, 19]
+    - [yuzuyomogi, 17]
+    - [z3zz4, 11]
+    - [zhaofeng_yinyue, 20]
+    - [zygocactus, 9]
+    - [_, 0]
+    - [korie_riko, 3]
+
+
+
+
+
+  
+optimizer:
+  # Note: To use adafactor, you need to disable scheduler
+  # name: transformers.Adafactor
+  # params: 
+  #   relative_step: True
+  name: bitsandbytes.optim.PagedAdamW8bit
+  params:
+    lr: 1.95e-5 
+    weight_decay: 0.03
+    
+ 
+scheduler:
+  name: transformers.get_cosine_schedule_with_warmup
+  params:
+    num_warmup_steps: 10
+    num_training_steps: 9600
+   
+
+sampling:
+  enabled: true
+  use_wandb: true
+  every_n_steps: 30
+  every_n_epochs: -1
+  save_dir: "samples"
+  seed: 114514
+  height: 1344
+  width: 960
+  steps: 28
+  cfg_scale: 5
+  negative_prompts: 
+    - "lowres,bad,error,missing,extra,fewer,cropped,jpeg artifacts,worst quality,bad quality,displeasing,unfinished,chromatic aberration,scan,scan artifacts,censored,"
+    - "lowres,bad,error,missing,extra,fewer,cropped,jpeg artifacts,worst quality,bad quality,displeasing,unfinished,chromatic aberration,scan,scan artifacts,censored,"
+    - "lowres,bad,error,missing,extra,fewer,cropped,jpeg artifacts,worst quality,bad quality,displeasing,unfinished,chromatic aberration,scan,scan artifacts,censored,"
+    - "lowres,bad,error,missing,extra,fewer,cropped,jpeg artifacts,worst quality,bad quality,displeasing,unfinished,chromatic aberration,scan,scan artifacts,censored,"
+    - "lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry,realistic,nose,"    
+    - "worst quality, low quality, old,lowres,censored,bad anatomy,bad hands,text,error,missing fingers,extra digit,fewer digits,cropped,signature,watermark,username,artist name,realistic,nose,"
+    - "worst quality, low quality, old,lowres,censored,bad anatomy,bad hands,text,error,missing fingers,extra digit,fewer digits,cropped,signature,watermark,username,artist name"
+    - "worst quality, low quality, old,lowres,censored,bad anatomy,bad hands,text,error,missing fingers,extra digit,fewer digits,cropped,signature,watermark,username,artist name"
+    - " lowres,(bad),error,text,fewer,extra,missing,worst quality,jpeg artifacts,low quality,watermark,unfinished,displeasing,oldest,early,chromatic aberration,signature,extra digits,artistic error,username,scan,[abstract],realistic,nose,"
+    
+  prompts: 
+    - "fukuro daizi,henreader,toosaka asagi,kaede (sayappa),goldowl,ask (askzy),ama mitsuki,wlop,best quality, 1girl, animal ears, solo, thighhighs, tail, cat ears, open mouth, long hair, green hair, striped, fang, hat, bow, sitting, cat tail, wariza, dress, looking at viewer, animal ear fluff, white background, black headwear, eyebrows visible through hair, blush, long sleeves, green eyes, bangs, "
+    - "gin00,freng,tsubasa tsubasa,naga_u,henreader,ask (askzy),tianliang duohe fangdongye,sho_(sho_lwlw),ciloranko,best quality, 1girl, solo, wings, animal ears, long hair, halo, breasts, feathered wings, angel, looking at viewer, hairband, navel, yellow eyes, jewelry, blush, angel wings, small breasts, bare shoulders, white wings, tail, very long hair, eyebrows visible through hair, bangs, blonde hair, parted lips, detached sleeves, hair between eyes, wide sleeves"
+    - "onineko,bjd,pvc,1girl,solo,long hair,looking at viewer,blush,gloves,red eyes,dress,bow,animal ears,bare shoulders,very long hair,twintails,tail,white hair,ahoge,sleeveless,barefoot,white gloves,bowtie,feet,animal ear fluff,legs,fox ears,toes,sleeveless dress,bare legs,blue bow,fox tail,low twintails,soles,fox girl,crown,foreshortening,foot focus,best quality,sensitive,absurdres"
+    - "memuro,peepo rose,wlop,chen bin, modare,mignon,ai-generated,masterpiece,best quality, 1girl, dress, solo, food, gloves, hair ornament, black dress, flower, long hair, hair flower, black gloves, tail, holding, blue eyes, multicolored hair, looking at viewer, hair between eyes, pink hair, bangs, hairband, bare shoulders, two side up, smile, rose, ribbon, hairclip, horns, silver hair, eyebrows visible through hair, blush, virtual youtuber, closed mouth, bow, frills"
+    - "mari (blue archive),[artist:wlop],[artist:ningen_mame],[artist:ask (askzy)],[artist:sho_(sho_lwlw)],[[artist:rhasta]],[artist:kedama_milk],1girl,solo,orange hair,yellow halo,thighhighs,black thighhighs,anus,twintails,pussy,on back,blush,black skirt,lying,id card,bowtie,bow,feet,center frills,no panties,no shoes,loli,frills,very long hair,soles,ass,looking at viewer,mouth hold,toes,spread legs,hands spread legs,Student ID card,best quality,amazing quality,very aesthetic,absurdres,"
+    - "mari (blue archive),orange hair,yellow halo,Oil painting,3d,mamuru,miv4t,JIMA,As109,toosaka asagi,aoi ogata,Krenz,ask (askzy),rei (sanbonzakura),pumpkinspicelatte,wlop,shiny skin,1girl,medim hair,happy,ass,(pussy:1.3),neon lights,neon palette,theme,night,glowing,dark,indoors,blue sofa,after bathing,bath towel,cute,professional lighting,best quality,amazing quality,very aesthetic,absurdres, (beautiful color,detailed,masterpiece,best quality,great quality,amazing quality,very aesthetic:1.5),absurdres,newest,"
+    - "plana (blue archive),1girl, solo,peepo rose,dead purity,kedama milk,ningen_mame,ciloranko,sho (sho lwlw),as109,rhasta,wlop,swd3e2,teranekosu,ai-generated,(pale skin:1.1),uncensored,loli,petite,revealing clothes,dynamic angle, 1girl, solo, underwear, bra, breasts, halo, pantyhose, hairband, long hair, small breasts, navel, panties, panties under pantyhose, black hairband, blush, black bra, braid, simple background, grey hair, red halo, white background, multicolored hair, collarbone, black pantyhose, single braid, pink hair, hair over one eye, skirt, colored inner hair, red pupils, open mouth, black skirt, black jacket, flying sweatdrops, white hair, grey eyes, black coat, best quality,  absurdres"
+    - "suzuran (arknights),sho (sho lwlw),rhasta,kedama_milk,[wlop],[ningen_mame],[ask (askzy)],1girl, pantyhose, white pantyhose, solo, underwear, panties, blonde hair, no shoes, loli, animal ears, looking through legs, fox ears, green eyes, ass, skirt, white shirt, soles, indoors, shirt, looking at viewer, white panties, fox girl, panties under pantyhose, blush, blue skirt, legs, chalkboard, :o, upside-down, bow, ribbon, feet, bow panties, red ribbon, hairband, open mouth, long hair, kneepits, neck ribbon, from behind, forehead, navel,"
+    - "memuro,1girl, solo, long hair, breasts, looking at viewer, blush, smile, open mouth, blue eyes, large breasts, skirt, black hair, thighhighs, navel, hair between eyes, cleavage, jewelry, nipples, underwear, school uniform, collarbone, panties, pink hair, multicolored hair, sidelocks, heart, :d, earrings, pleated skirt, open clothes, teeth, black thighhighs, miniskirt, stomach, armpits, necklace, nail polish, mole, two-tone hair, streaked hair, bra, arm up, fingernails, plaid, mole under eye, v, open shirt, makeup, leaning forward, plaid skirt, clothes pull, breasts out, grey skirt, pink nails, long fingernails, hoop earrings, pink bra, w, heart earrings, red bra, bra pull, heart necklace, masterpiece, nsfw"
+ 
+  
+

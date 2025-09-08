@@ -35,6 +35,7 @@ class TextImageArrowStream(Dataset):
                  uncond_p_t5=0.0,
                  rank=0,
                  dtype=torch.float32,
+                 caption_columns=None,
                  **kwarges
                  ):
         self.args = args
@@ -51,6 +52,8 @@ class TextImageArrowStream(Dataset):
         self.batch_size = batch_size
         self.world_size = world_size
         self.index_manager = self.load_index()
+        # Optional list of caption column names to randomly choose from when `captions` column is not present
+        self.caption_columns = caption_columns if isinstance(caption_columns, (list, tuple)) else None
 
         # clip params
         self.uncond_p = uncond_p
@@ -195,15 +198,100 @@ class TextImageArrowStream(Dataset):
 
 
     def get_original_text(self, ind):
+        # Order of preference:
+        # 1) `captions` column (list/json/str) -> random choice
+        # 2) User-specified `caption_columns` that exist -> random choice among non-empty
+        # 3) Fallback between `text_zh` and `text_en` if available -> random choice among available
 
+        try:
+            available_columns = set(self.index_manager.get_columns(ind))
+        except Exception:
+            available_columns = set()
 
-        # if self.index_manager.get_attribute(ind, 'captions'):
-        #     text_list = kwargs.get("caption",[""])
-        #     text = random.choice(text_list)
-        # else:
-        text = self.index_manager.get_attribute(ind, 'text_zh' if self.enable_CN else 'text_en')
-            
-        return text
+        # 1) unified `captions` column
+        if 'captions' in available_columns:
+            try:
+                raw_val = self.index_manager.get_attribute(ind, 'captions')
+            except Exception:
+                raw_val = None
+            candidates = self.normalize_captions(raw_val)
+            if candidates:
+                return random.choice(candidates)
+
+        # 2) explicit list of caption columns
+        if self.caption_columns is not None:
+            candidates = []
+            for col in self.caption_columns:
+                if col in available_columns:
+                    try:
+                        val = self.index_manager.get_attribute(ind, col)
+                    except Exception:
+                        val = None
+                    if val is not None:
+                        text_val = str(val).strip()
+                        if len(text_val) > 0:
+                            candidates.append(text_val)
+            if candidates:
+                return random.choice(candidates)
+
+        # 3) default fallback behavior: prefer CN then EN or vice versa
+        fallback_order = ['text_zh', 'text_en'] if self.enable_CN else ['text_en', 'text_zh']
+        candidates = []
+        for col in fallback_order:
+            if col in available_columns:
+                try:
+                    val = self.index_manager.get_attribute(ind, col)
+                except Exception:
+                    val = None
+                if val is not None:
+                    text_val = str(val).strip()
+                    if len(text_val) > 0:
+                        candidates.append(text_val)
+        if candidates:
+            return random.choice(candidates)
+
+        # 4) ultimate fallback
+        return ''
+
+    @staticmethod
+    def normalize_captions(raw_val):
+        """Normalize various caption storage formats to a list[str].
+
+        Supported formats:
+        - list/tuple of strings
+        - JSON-encoded list of strings
+        - delimited string using '||' or newline separators
+        - single string -> returns [that string] if non-empty
+        """
+        if raw_val is None:
+            return []
+        # list/tuple
+        if isinstance(raw_val, (list, tuple)):
+            texts = [str(x).strip() for x in raw_val if x is not None]
+            return [t for t in texts if len(t) > 0]
+        # try JSON first
+        if isinstance(raw_val, str):
+            s = raw_val.strip()
+            if len(s) == 0:
+                return []
+            try:
+                parsed = json.loads(s)
+                if isinstance(parsed, (list, tuple)):
+                    texts = [str(x).strip() for x in parsed if x is not None]
+                    return [t for t in texts if len(t) > 0]
+            except Exception:
+                pass
+            # fall back to common delimiters
+            if '||' in s:
+                parts = [p.strip() for p in s.split('||')]
+            else:
+                parts = [p.strip() for p in s.split('\n')]
+            parts = [p for p in parts if len(p) > 0]
+            if parts:
+                return parts
+            return [s]
+        # fallback
+        return [str(raw_val).strip()]
     
 
     def get_original_text_old(self, ind):

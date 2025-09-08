@@ -25,26 +25,45 @@ def setup(fabric: pl.Fabric, config: OmegaConf) -> tuple:
     )
 
     world_size = fabric.world_size
-    logger.info(f"loading dataset from {config.dataset.index_file}")
-    dataset = TextImageArrowStream(args="args",
-                                   resolution=config.trainer.resolution,
-                                   random_flip=config.dataset.random_flip,
-                                   log_fn=logger.info,
-                                   index_file=config.dataset.index_file,
-                                   multireso=config.dataset.multireso,
-                                   batch_size=config.trainer.batch_size,
-                                   world_size=world_size
-                                   )
+    dataset_name = config.dataset.get("name", "") if hasattr(config, "dataset") else ""
+    dataloader = None
 
-    if config.dataset.multireso:
-        sampler = BlockDistributedSampler(dataset, num_replicas=world_size, rank=fabric.global_rank, seed=config.trainer.seed,
-                                          shuffle=True, drop_last=True, batch_size=config.trainer.batch_size)
+    # If dataset name points to a folder-based dataset (e.g., data.AspectRatioDataset / data.AdaptiveSizeDataset),
+    # instantiate it dynamically; otherwise, fall back to Arrow loader.
+    use_folder_dataset = isinstance(dataset_name, str) and dataset_name.startswith("data.")
+
+    if use_folder_dataset:
+        logger.info(f"loading folder dataset with class {dataset_name}")
+        dataset_class = get_class(dataset_name)
+        dataset = dataset_class(
+            batch_size=config.trainer.batch_size,
+            rank=fabric.global_rank,
+            dtype=torch.float32,
+            **config.dataset,
+        )
+        dataloader = dataset.init_dataloader()
     else:
-        sampler = DistributedSamplerWithStartIndex(dataset, num_replicas=world_size, rank=fabric.global_rank, seed=config.trainer.seed,
-                                                   shuffle=True, drop_last=True)
+        # Arrow dataset path (backward compatible)
+        logger.info(f"loading arrow dataset from {config.dataset.index_file}")
+        dataset = TextImageArrowStream(args="args",
+                                       resolution=config.trainer.resolution,
+                                       random_flip=config.dataset.random_flip,
+                                       log_fn=logger.info,
+                                       index_file=config.dataset.index_file,
+                                       multireso=config.dataset.multireso,
+                                       batch_size=config.trainer.batch_size,
+                                       world_size=world_size
+                                       )
+
+        if config.dataset.multireso:
+            sampler = BlockDistributedSampler(dataset, num_replicas=world_size, rank=fabric.global_rank, seed=config.trainer.seed,
+                                              shuffle=True, drop_last=True, batch_size=config.trainer.batch_size)
+        else:
+            sampler = DistributedSamplerWithStartIndex(dataset, num_replicas=world_size, rank=fabric.global_rank, seed=config.trainer.seed,
+                                                       shuffle=True, drop_last=True)
         
-    dataloader = DataLoader(dataset, batch_size=config.trainer.batch_size, shuffle=False, sampler=sampler,
-                        num_workers=config.dataset.num_workers, pin_memory=True, drop_last=True)
+        dataloader = DataLoader(dataset, batch_size=config.trainer.batch_size, shuffle=False, sampler=sampler,
+                            num_workers=config.dataset.num_workers, pin_memory=True, drop_last=True)
     
 
 

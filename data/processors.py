@@ -75,3 +75,23 @@ def shuffle_prompts_sdstyle(e: Entry):
     
     e.prompt = caption
     return e
+
+
+def random_pick_multiline(e: Entry):
+    """Pick one line from a multi-line caption.
+
+    - Treats newline ("\n") as delimiter.
+    - Ignores empty lines after stripping.
+    - Does NOT shuffle tokens; only selects one line as the final prompt.
+    """
+    try:
+        if not isinstance(e.prompt, str):
+            return e
+        # Normalize line endings and split
+        lines = [ln.strip() for ln in e.prompt.replace("\r\n", "\n").replace("\r", "\n").split("\n")]
+        lines = [ln for ln in lines if len(ln) > 0]
+        if len(lines) > 0:
+            e.prompt = random.choice(lines)
+        return e
+    except Exception:
+        return e
