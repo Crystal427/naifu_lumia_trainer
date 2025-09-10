@@ -1,0 +1,81 @@
+name: folder-run
+target: modules.lumina2_model_train.setup
+adaptive_loss_weight: True
+
+model:
+  tokenizer_path: /home/ubuntu/Test/lumina/models/tokenizer
+  text_encoder_path: /home/ubuntu/Test/lumina/models/text_encoder
+  model_name: NextDiT_2B_GQA_patch2_Adaln_Refiner
+  qk_norm: True
+  # resume: /mnt/public/lu2/checkpoints/last # 按需
+
+trainer:
+  auto_resume: false
+  init_from: /home/ubuntu/Test/lumina/models
+  checkpointing: false
+  model_path: /home/ubuntu/Test/lumina/models
+  batch_size: 2
+  seed: 1122
+  # wandb_id: "lumina2_folder"
+  use_xformers: false
+  accumulate_grad_batches: 32
+  grad_clip: 2
+  gradient_clip_val: 2
+  save_format: original
+  checkpoint_dir: /home/ubuntu/Test/lumina/outputs
+  checkpoint_freq: 1
+  save_weights_only: true
+  max_epochs: 2
+  checkpoint_steps: 250
+  max_steps: -1
+  resolution: 1536
+
+advanced:
+  snr_type: "lognorm"
+  no_shift: true
+  train_res: [1536]
+  use_ema: true
+
+lightning:
+  accelerator: gpu
+  devices: 4
+  strategy: "deepspeed"
+  precision: bf16
+
+dataset:
+  name: data.AdaptiveSizeDataset           # 或 data.AspectRatioDataset
+  img_path: "/home/ubuntu/Test/lumina/datasets"                    # 你的資料根目錄（artist1/artist2/...）
+  num_workers: 64
+  random_flip: false
+  process_batch_fn: data.processors.random_pick_multiline  # 多行 caption 按行隨機挑一行
+  repeat_strategy:
+    - [anmi, 4]
+  # 可選（AspectRatioDataset 常用）
+  target_area: 2359296
+  min_size: 512
+  max_size: 1600
+  divisible: 64
+
+optimizer:
+  name: torch.optim.AdamW
+  params:
+    lr: 8e-5
+    weight_decay: 1e-2
+
+scheduler:
+  name: transformers.get_constant_schedule_with_warmup
+  params:
+    num_warmup_steps: 1000
+    last_epoch: -1
+
+sampling:
+  enabled: false
+  use_wandb: true
+  seed: 1234
+  height: 832
+  width: 1024
+  every_n_steps: 1000
+  every_n_epochs: 1
+  save_dir: "samples/lumina2_folder"
+  prompts:
+    - "You are an assistant designed to generate anime images..."
