@@ -16,7 +16,7 @@ trainer:
   model_path: /home/ubuntu/Test/lumina/models
   batch_size: 2
   seed: 1122
-  # wandb_id: "lumina2_folder"
+  wandb_id: "lumina2_folder"
   use_xformers: false
   accumulate_grad_batches: 32
   grad_clip: 2
@@ -70,7 +70,7 @@ scheduler:
 
 sampling:
   enabled: false
-  use_wandb: true
+  use_wandb: false
   seed: 1234
   height: 832
   width: 1024

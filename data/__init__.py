@@ -1,1 +1,1 @@
-from .bucket import AspectRatioDataset
+from .bucket import AspectRatioDataset, AdaptiveSizeDataset
