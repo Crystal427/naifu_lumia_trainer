@@ -281,10 +281,12 @@ class Lumina2Model(pl.LightningModule):
             if random.random() < proportion_empty_prompts:
                 captions.append("")
             elif isinstance(caption, str):
-                captions.append(caption)
+                # Convert literal "\n" to real newline for model consumption
+                captions.append(caption.replace("\\n", "\n"))
             elif isinstance(caption, (list, np.ndarray)):
                 # take a random caption if there are multiple
-                captions.append(random.choice(caption) if is_train else caption[0])
+                chosen = random.choice(caption) if is_train else caption[0]
+                captions.append(str(chosen).replace("\\n", "\n"))
 
         
         text_inputs = tokenizer(

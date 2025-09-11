@@ -78,14 +78,17 @@ def try_exif_transpose(img: Image.Image) -> Image.Image:
 
 def replace_json_newlines(s: str) -> str:
     # Convert actual newlines to literal \n for single-line serialization
-    return s.replace("\\", "\\\\").replace("\n", "\\n")
+    # Do NOT escape existing backslashes to avoid producing "\\n".
+    if s is None:
+        return s
+    s = s.replace("\r\n", "\n").replace("\r", "\n")
+    return s.replace("\n", "\\n")
 
 
 # ----------------------------
 # Danbooru tag processing (reference-aligned)
 # ----------------------------
 PATTERN_ESCAPED_BRACKET = r"\\([\(\)\[\]\{\}])"
-
 
 def unescape_brackets(s: str) -> str:
     return re.sub(PATTERN_ESCAPED_BRACKET, r"\1", s)
@@ -646,7 +649,7 @@ def save_as_webp(src_path: Path, dst_path: Path, target_min_side: int) -> bool:
                 im = im.convert("RGB")
             im = ensure_min_side(im, target_min_side)
             ensure_dir(dst_path.parent)
-            im.save(str(dst_path), format="WEBP", quality=95, method=6)
+            im.save(str(dst_path), format="WEBP", quality=85, method=6)
         return True
     except Exception:
         return False

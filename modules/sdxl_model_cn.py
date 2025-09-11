@@ -272,10 +272,11 @@ class StableDiffusionModelCN(pl.LightningModule):
             if random.random() < proportion_empty_prompts:
                 captions.append("")
             elif isinstance(caption, str):
-                captions.append(caption)
+                captions.append(caption.replace("\\n", "\n"))
             elif isinstance(caption, (list, np.ndarray)):
                 # take a random caption if there are multiple
-                captions.append(random.choice(caption) )
+                chosen = random.choice(caption)
+                captions.append(str(chosen).replace("\\n", "\n"))
 
         # captions = prompt
         # print(captions)
@@ -318,6 +319,8 @@ class StableDiffusionModelCN(pl.LightningModule):
         text_encoder = self.text_encoder
         text_encoder_2 = self.text_encoder_2
 
+        # Normalize literal \n to real newline before tokenization
+        prompt = [p.replace("\\n", "\n") if isinstance(p, str) else p for p in prompt]
         input_ids1 = self.get_input_ids(prompt, tokenizer).to(self.target_device)
 
         input_ids2 = self.get_input_ids(prompt, tokenizer_2).to(self.target_device)
