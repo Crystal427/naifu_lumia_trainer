@@ -151,17 +151,9 @@ class SupervisedFineTune(Lumina2Model):
             #         images = F.interpolate(images, scale_factor=scale_factor,
             #                             mode=mode, align_corners=None if mode in ['nearest', 'area'] else False)
 
-        trans = create_transport(
-            "Linear",
-            "velocity",
-            None,
-            None,
-            None,
-            snr_type=self.config.advanced.snr_type,
-            do_shift=not self.config.advanced.no_shift,
-            seq_len=(1024 // 16) ** 2,
-            # seq_len=target_size//(16*16)
-        )
+        # NOTE: seq_len 影响 time shift（mu）的计算，应与 token 数一致。
+        # 在 Lumina 的实现中，mu 使用 (h//2)*(w//2)（latent 维度的一半作为 patch 大小 2 的 token 网格）。
+        # 因此需要在获得 latent 尺寸后动态设置，而不是固定为 4096（仅适用于 1024x1024）。
 
         
         # 编码文本提示
@@ -173,7 +165,27 @@ class SupervisedFineTune(Lumina2Model):
         )
 
         # 对图像进行VAE编码
-        latents = self.encode_images(images)  # [B, C, H, W]
+        latents = self.encode_images(images)  # [B, C, H, W]（list of tensors）
+
+        # 动态创建 transport，确保 seq_len 与实际 token 数一致
+        # token_count = (latent_h / patch_size) * (latent_w / patch_size)
+        patch_size = getattr(self, "model_patch_size", 2)
+        sample_latent = latents[0] if isinstance(latents, (list, tuple)) else latents
+        latent_h, latent_w = sample_latent.shape[-2], sample_latent.shape[-1]
+        token_h = latent_h // patch_size
+        token_w = latent_w // patch_size
+        seq_len = int(token_h * token_w)
+
+        trans = create_transport(
+            "Linear",
+            "velocity",
+            None,
+            None,
+            None,
+            snr_type=self.config.advanced.snr_type,
+            do_shift=not self.config.advanced.no_shift,
+            seq_len=seq_len,
+        )
 
         # muti resolution
         # if len(latents.shape) == 3:
