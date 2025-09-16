@@ -12,9 +12,9 @@ model:
 trainer:
   auto_resume: false
   init_from: /home/ubuntu/Test/lumina/models
-  checkpointing: false
+  checkpointing: true
   model_path: /home/ubuntu/Test/lumina/models
-  batch_size: 1
+  batch_size: 6
   seed: 47
   wandb_id: "lumina2_train_8e-5_const_warmup_dataset0822"
   use_xformers: false
@@ -32,9 +32,9 @@ trainer:
 
 advanced:
   snr_type: "lognorm"
-  no_shift: true
+  no_shift: false
   train_res: [1536]
-  use_ema: true
+  use_ema: false
 
 lightning:
   accelerator: gpu
@@ -44,7 +44,7 @@ lightning:
 
 dataset:
   name: data.AdaptiveSizeDataset           # 或 data.AspectRatioDataset
-  img_path: "/home/ubuntu/Test/lumina/datasets"                    # 你的資料根目錄（artist1/artist2/...）
+  img_path: "/home/ubuntu/Test/lumina/datasets/astra_300k"                    # 你的資料根目錄（artist1/artist2/...）
   num_workers: 64
   random_flip: false
   process_batch_fn: data.processors.random_pick_multiline  # 多行 caption 按行隨機挑一行
@@ -917,23 +917,25 @@ dataset:
   # 可選（AspectRatioDataset 常用）
   target_area: 2359296
   min_size: 512
-  max_size: 1600
+  max_size: 4096
   divisible: 64
 
 optimizer:
   name: torch.optim.AdamW
   params:
-    lr: 8e-5
+    lr: 3e-5
     weight_decay: 1e-2
 
 scheduler:
-  name: transformers.get_constant_schedule_with_warmup
+  name: transformers.get_cosine_schedule_with_warmup
   params:
-    num_warmup_steps: 1000
+    num_warmup_steps: 100
+    num_training_steps: 10850  # 总训练步数
+    num_cycles: 0.5  # cosine 周期数
     last_epoch: -1
 
 sampling:
-  enabled: ture
+  enabled: false
   use_wandb: false
   seed: 1234
   height: 1020
