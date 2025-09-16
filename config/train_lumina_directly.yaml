@@ -26,7 +26,7 @@ trainer:
   checkpoint_freq: 1
   save_weights_only: true
   max_epochs: 10
-  checkpoint_steps: 500
+  checkpoint_steps: 50
   max_steps: -1
   resolution: 1536
 
