@@ -89,20 +89,21 @@ class Lumina2Model(pl.LightningModule):
             self.text_encoder = AutoModel.from_pretrained(
                 self.config.model.text_encoder_path,
                 local_files_only=True,
-                torch_dtype=torch.bfloat16
-            ).cuda()
+                torch_dtype=torch.bfloat16,
+            )
         else:
             self.text_encoder = AutoModel.from_pretrained(
                 self.model_path,
                 subfolder="text_encoder",
                 local_files_only=True,
-                torch_dtype=torch.bfloat16
-            ).cuda()
+                torch_dtype=torch.bfloat16,
+            )
 
-
+        self.text_encoder.to(self.target_device)
+        self.text_encoder.eval()
         logger.info(f"text encoder: {type(self.text_encoder)}")
         self.cap_feat_dim = self.text_encoder.config.hidden_size
-         
+
 
         # Create model:
         self.model = models.__dict__[self.config.model.model_name](
@@ -229,16 +230,16 @@ class Lumina2Model(pl.LightningModule):
         if self.config.model.get("vae_path", None):
             self.vae = AutoencoderKL.from_pretrained(
                 self.config.model.vae_path,
-                torch_dtype=torch.bfloat16
+                torch_dtype=torch.bfloat16,
             )
         else:
             self.vae = AutoencoderKL.from_pretrained(
                 self.model_path,
                 subfolder="vae",
-                torch_dtype=torch.bfloat16
+                torch_dtype=torch.bfloat16,
             )
 
-       
+
 
 
 
@@ -247,8 +248,9 @@ class Lumina2Model(pl.LightningModule):
             self.latents_std = torch.tensor(advanced.latents_std)
             self.latents_mean = self.latents_mean.view(1, 4, 1, 1).to(self.target_device)
             self.latents_std = self.latents_std.view(1, 4, 1, 1).to(self.target_device)
-        
+
         self.vae.to(self.target_device)
+        self.vae.eval()
         self.vae.requires_grad_(False)
         self.model.to(self.target_device)
         self.model.train()
@@ -308,6 +310,8 @@ class Lumina2Model(pl.LightningModule):
             output_hidden_states=True,
         ).hidden_states[-2]
 
+        prompt_masks = prompt_masks.to(dtype=torch.int32)
+
         # 确保 prompt_embeds 的类型与 x_embedder 的 Linear 层匹配
         prompt_embeds = prompt_embeds.to(dtype=self.model.x_embedder.weight.dtype)
 
@@ -333,14 +337,23 @@ class Lumina2Model(pl.LightningModule):
             "flux": 0.1159,
         }["flux"]
         
-        x = [img.to(self.target_device, non_blocking=True) for img in images]
-   
+        if isinstance(images, (list, tuple)):
+            images = torch.stack(images, dim=0)
 
-        for i, img in enumerate(x):
-            x[i] = (self.vae.encode(img[None].bfloat16()).latent_dist.mode()[0] - vae_shift) * vae_scale
-            x[i] = x[i].float()
+        images = images.to(self.target_device, non_blocking=True)
 
-        return x
+        latents = []
+        scale = torch.tensor(vae_scale, device=self.target_device, dtype=torch.bfloat16)
+        shift = torch.tensor(vae_shift, device=self.target_device, dtype=torch.bfloat16)
+
+        for start in range(0, images.shape[0], self.vae_encode_bsz):
+            image_batch = images[start : start + self.vae_encode_bsz]
+            encoded = self.vae.encode(image_batch.to(dtype=torch.bfloat16)).latent_dist.mode()
+            encoded = (encoded - shift) * scale
+            latents.append(encoded.float())
+
+        latents = torch.cat(latents, dim=0).contiguous()
+        return latents.to(dtype=self.model.x_embedder.weight.dtype)
         
         
 

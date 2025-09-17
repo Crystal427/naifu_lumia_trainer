@@ -165,12 +165,12 @@ class SupervisedFineTune(Lumina2Model):
         )
 
         # 对图像进行VAE编码
-        latents = self.encode_images(images)  # [B, C, H, W]（list of tensors）
+        latents = self.encode_images(images)
 
         # 动态创建 transport，确保 seq_len 与实际 token 数一致
         # token_count = (latent_h / patch_size) * (latent_w / patch_size)
         patch_size = getattr(self, "model_patch_size", 2)
-        sample_latent = latents[0] if isinstance(latents, (list, tuple)) else latents
+        sample_latent = latents[0]
         latent_h, latent_w = sample_latent.shape[-2], sample_latent.shape[-1]
         token_h = latent_h // patch_size
         token_w = latent_w // patch_size
@@ -197,7 +197,11 @@ class SupervisedFineTune(Lumina2Model):
         loss_dict = trans.training_losses(self.model, latents, model_kwargs)
         # loss_dict_256 = trans.training_losses(self.model, latents_mb_256, model_kwargs)
 
-        loss_1024 = loss_dict["loss"].sum() / self.batch_size
+        loss_1024 = loss_dict["loss"]
+        if torch.is_tensor(loss_1024):
+            if loss_1024.dim() > 0:
+                loss_1024 = loss_1024.mean()
+            loss_1024 = loss_1024.float()
         # loss_256 = loss_dict_256["loss"].sum() / self.batch_size
         loss = loss_1024 
 
